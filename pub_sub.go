@@ -1,27 +1,29 @@
 package pub_sub
 
-import "sync"
+import (
+	"sync"
+)
 
-type GoPS interface {
-	Publish(topic, message string)
-	Subscribe(topic string) chan string
-	Unsubscribe(ch chan string)
+type GoPS[T any] interface {
+	Publish(topic string, message T)
+	Subscribe(topic string) chan T
+	Unsubscribe(ch chan T)
 }
 
-type pubSub struct {
+type pubSub[T any] struct {
 	lock     sync.RWMutex
-	pubStore map[string][]chan string
-	subStore map[chan string]string
+	pubStore map[string][]chan T
+	subStore map[chan T]string
 	capacity int
 }
 
-func NewPubSub(capacity int) GoPS {
-	pub := map[string][]chan string{}
-	sub := map[chan string]string{}
-	return &pubSub{pubStore: pub, subStore: sub, capacity: capacity}
+func NewPubSub[T any](capacity int) GoPS[T] {
+	pub := map[string][]chan T{}
+	sub := map[chan T]string{}
+	return &pubSub[T]{pubStore: pub, subStore: sub, capacity: capacity}
 }
 
-func (ps *pubSub) Publish(topic, message string) {
+func (ps *pubSub[T]) Publish(topic string, message T) {
 
 	ps.lock.RLock()
 	defer ps.lock.RUnlock()
@@ -35,13 +37,13 @@ func (ps *pubSub) Publish(topic, message string) {
 	}
 }
 
-func (ps *pubSub) Subscribe(topic string) chan string {
+func (ps *pubSub[T]) Subscribe(topic string) chan T {
 	ps.lock.RLock()
 	defer ps.lock.RUnlock()
 
-	ch := make(chan string, ps.capacity)
+	ch := make(chan T, ps.capacity)
 	if len(ps.pubStore[topic]) == 0 {
-		ps.pubStore[topic] = make([]chan string, 0)
+		ps.pubStore[topic] = make([]chan T, 0)
 	}
 	// add the channel to the list of subscribers for the corresponding topic
 	ps.pubStore[topic] = append(ps.pubStore[topic], ch)
@@ -50,12 +52,12 @@ func (ps *pubSub) Subscribe(topic string) chan string {
 	return ch
 }
 
-func (ps *pubSub) Unsubscribe(ch chan string) {
+func (ps *pubSub[T]) Unsubscribe(ch chan T) {
 
 	ps.lock.RLock()
 	defer ps.lock.RUnlock()
 	topic := ps.subStore[ch]
-	updatedSubs := make([]chan string, 0)
+	updatedSubs := make([]chan T, 0)
 	for _, oldCh := range ps.pubStore[topic] {
 		if oldCh != ch {
 			updatedSubs = append(updatedSubs, oldCh)

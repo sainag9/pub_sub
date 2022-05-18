@@ -7,7 +7,7 @@ import (
 func Test_single_subscriber(t *testing.T) {
 
 	pubMsg := "hello foo!"
-	client := NewPubSub(10)
+	client := NewPubSub[string](10)
 
 	ch := client.Subscribe("foo")
 	// 1 message
@@ -36,7 +36,7 @@ func Test_single_subscriber(t *testing.T) {
 func Test_multiple_subscriber(t *testing.T) {
 
 	pubMsg := "hello foofers!"
-	client := NewPubSub(10)
+	client := NewPubSub[string](10)
 	ch1 := client.Subscribe("foo")
 	ch2 := client.Subscribe("foo")
 	ch3 := client.Subscribe("foo")
@@ -51,7 +51,7 @@ func Test_multiple_subscriber(t *testing.T) {
 func Test_unsubscribe(t *testing.T) {
 
 	pubMsg := "hello foof!"
-	client := NewPubSub(10)
+	client := NewPubSub[string](10)
 	ch1 := client.Subscribe("foo")
 
 	client.Publish("foo", pubMsg)
@@ -64,7 +64,7 @@ func Test_unsubscribe(t *testing.T) {
 }
 
 func Benchmark_basic_func(b *testing.B) {
-	client := NewPubSub(1000000)
+	client := NewPubSub[string](1000000)
 	ch := client.Subscribe("foo")
 	pubMsg := "hello foo!"
 	for i := 0; i < b.N; i++ {

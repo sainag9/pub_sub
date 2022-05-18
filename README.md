@@ -4,7 +4,7 @@
 
 ```golang
 
-	client := NewPubSub(10)
+	client := NewPubSub[string](10)
 	ch1 := client.Subscribe("foo")
 	ch2 := client.Subscribe("foo")
 	ch3 := client.Subscribe("foo")
